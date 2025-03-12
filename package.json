@@ -1,0 +1,46 @@
+{
+  "name": "authvisage-sdk",
+  "version": "0.1.0",
+  "description": "authvisage client sdk",
+  "main": "index.js",
+  "dependencies": {
+    "@supabase/auth-js": "^2.68.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@types/node": "^22.13.10",
+    "eslint": "^9.22.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.1"
+  },
+  "scripts": {
+    "test": "jest",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zeyadAjamy/authvisage-sdk.git"
+  },
+  "keywords": [
+    "authvisage",
+    "face",
+    "authentication",
+    "face-auth",
+    "authentication",
+    "supabase",
+    "sdk",
+    "face",
+    "id"
+  ],
+  "author": "Zeyad Alajamy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zeyadAjamy/authvisage-sdk/issues"
+  },
+  "homepage": "https://github.com/zeyadAjamy/authvisage-sdk#readme",
+  "lint-staged": {
+    "*.js": "eslint --cache --fix"
+  }
+}
