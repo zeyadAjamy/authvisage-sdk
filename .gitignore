@@ -13,3 +13,6 @@
 # environment
 .env*
 !.env.example
+
+# IDE
+.vscode
