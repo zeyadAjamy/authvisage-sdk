@@ -43,6 +43,6 @@
   },
   "homepage": "https://github.com/zeyadAjamy/authvisage-sdk#readme",
   "lint-staged": {
-    "*.js": "eslint --cache --fix"
+    "*.ts": "eslint --cache --fix"
   }
 }
