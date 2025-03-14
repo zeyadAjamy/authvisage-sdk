@@ -1,13 +1,15 @@
-import { GoTrueClient, GoTrueClientOptions, Session } from "@supabase/auth-js";
+import { GoTrueClient, Session } from "@supabase/auth-js";
 import { OAuthStateHandler } from "./oauthStateHandler";
 import { PKCEHandler } from "./pkceHandler";
 
 /**
  * Configuration options for AuthVisage authentication client
  */
-export interface AuthVisageClientOptions extends GoTrueClientOptions {
-  authVisageProjectId: string;
-  authVisagePlatformUrl: string;
+export interface AuthVisageClientOptions {
+  goTrueUrl: string;
+  platformUrl: string;
+  backendUrl: string;
+  projectId: string;
   redirectUrl: string;
 }
 
@@ -23,39 +25,28 @@ export interface TokenResponse {
 /**
  * Main AuthVisage client for handling authentication
  */
-export class AuthVisageClient extends GoTrueClient {
-  private readonly authVisageProjectId: string;
-  private readonly authVisagePlatformUrl: string;
+export class AuthVisageClient {
+  private readonly projectId: string;
+  private readonly platformUrl: string;
+  private readonly backendUrl: string;
   private readonly redirectUrl: string;
+  private readonly authClient: GoTrueClient;
 
   constructor(options: AuthVisageClientOptions) {
-    const {
-      authVisageProjectId,
-      authVisagePlatformUrl,
-      redirectUrl,
-      ...goTrueOptions
-    } = options;
-    super(goTrueOptions);
+    const { goTrueUrl, platformUrl, projectId, backendUrl, redirectUrl } =
+      options;
 
-    this.authVisageProjectId = authVisageProjectId;
-    this.authVisagePlatformUrl = authVisagePlatformUrl;
+    this.authClient = new GoTrueClient({
+      url: goTrueUrl,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    });
+    this.projectId = projectId;
+    this.platformUrl = platformUrl;
+    this.backendUrl = backendUrl;
     this.redirectUrl = redirectUrl;
 
     this._handleOAuthCallback().catch(console.error);
-  }
-
-  /**
-   * Initiates the face login process by redirecting the user to AuthVisage
-   */
-  public async faceLogin(): Promise<void> {
-    try {
-      const authUrl = await this._constructAuthUrl();
-      window.location.assign(authUrl);
-    } catch (error) {
-      throw new Error(
-        `Face login initiation failed: ${(error as Error).message}`
-      );
-    }
   }
 
   /**
@@ -65,9 +56,9 @@ export class AuthVisageClient extends GoTrueClient {
     const state = OAuthStateHandler.generate();
     const { codeChallenge } = await PKCEHandler.generate();
 
-    const url = new URL(this.authVisagePlatformUrl + "/authorize");
+    const url = new URL(this.platformUrl + "/authorize");
     url.searchParams.append("state", state);
-    url.searchParams.append("projectId", this.authVisageProjectId);
+    url.searchParams.append("projectId", this.projectId);
     url.searchParams.append("redirect_uri", this.redirectUrl);
     url.searchParams.append("code_challenge", codeChallenge);
     url.searchParams.append("code_challenge_method", "S256");
@@ -89,13 +80,13 @@ export class AuthVisageClient extends GoTrueClient {
       throw new Error("State validation failed! Possible CSRF attack.");
     }
 
-    const response = await fetch(`${this.authVisagePlatformUrl}/oauth/token`, {
+    const response = await fetch(`${this.backendUrl}/token`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({
         code,
-        project_id: this.authVisageProjectId,
+        project_id: this.projectId,
         redirect_uri: this.redirectUrl,
       }),
     });
@@ -111,9 +102,23 @@ export class AuthVisageClient extends GoTrueClient {
     }
 
     if (data.refresh_token) {
-      this.setSession(data as Session);
+      this.authClient.setSession(data as Session);
     }
 
     return data.access_token;
+  }
+
+  /**
+   * Initiates the face login process by redirecting the user to AuthVisage
+   */
+  public async faceLogin(): Promise<void> {
+    try {
+      const authUrl = await this._constructAuthUrl();
+      window.location.assign(authUrl);
+    } catch (error) {
+      throw new Error(
+        `Face login initiation failed: ${(error as Error).message}`
+      );
+    }
   }
 }
