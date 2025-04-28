@@ -2,110 +2,198 @@
 
 ## Overview
 
-The `AuthVisageClient` is a custom authentication client built for OAuth and PKCE-based authentication. It integrates with AuthVisage's platform for secure face authentication while encapsulating `@supabase/auth-js` internally to hide direct authentication methods such as sign-in and sign-up.
+The AuthVisageClient SDK simplifies the integration of face authentication into your applications. It provides tools for token management, PKCE handling, OAuth state management, and authentication state change notifications.
+
+## Features
+
+- **Face Login**: Redirect users to the AuthVisage platform for face authentication.
+- **Token Management**: Handles token refresh and expiration.
+- **PKCE Support**: Includes Proof Key for Code Exchange (PKCE) utilities.
+- **OAuth State Management**: Ensures secure state validation during the OAuth flow.
+- **Authentication State Notifications**: Subscribe to auth state changes and react to user updates.
 
 ## Installation
 
-Ensure you have `@supabase/auth-js` installed in your project:
+Install the SDK via npm:
 
-```sh
-npm install @supabase/auth-js
-```
-
-Install the AuthVisage SDK:
-
-```sh
+```bash
 npm install authvisage-sdk
 ```
 
-Import the client into your application:
+## Configuration
 
-```ts
-import { AuthVisageClient, AuthVisageClientOptions } from "authvisage-sdk";
-```
+The SDK requires the following configuration options:
 
-## Configuration Options
+| Option          | Type   | Description                              |
+| --------------- | ------ | ---------------------------------------- |
+| `platformUrl` | string | The base URL of the AuthVisage platform. |
+| `projectId`   | string | Your project ID.                         |
+| `backendUrl`  | string | The URL of your backend server.          |
+| `redirectUrl` | string | The URL to redirect to after login.      |
 
-The `AuthVisageClient` requires the following configuration options:
+### Example Configuration
 
-| Option        | Type     | Description                                    |
-| ------------- | -------- | ---------------------------------------------- |
-| `goTrueUrl`   | `string` | The URL of the GoTrue authentication server.   |
-| `platformUrl` | `string` | The URL of the AuthVisage platform.            |
-| `backendUrl`  | `string` | The backend service URL for token exchange.    |
-| `projectId`   | `string` | The unique identifier for the project.         |
-| `redirectUrl` | `string` | The redirect URI for handling OAuth callbacks. |
+```typescript
+import { AuthVisageClient } from "authvisage-sdk";
 
-## Initialization
-
-Create an instance of `AuthVisageClient` with the necessary options:
-
-```ts
-const authClient = new AuthVisageClient({
-  goTrueUrl: "https://auth.example.com",
-  platformUrl: "https://platform.authvisage.com",
-  backendUrl: "https://api.authvisage.com",
+const client = new AuthVisageClient({
+  platformUrl: "https://authvisage.com",
   projectId: "your-project-id",
-  redirectUrl: "https://yourapp.com/callback",
+  backendUrl: "https://your-backend.com",
+  redirectUrl: "https://your-app.com/callback",
 });
 ```
 
-## Methods
+## API Reference
 
-### `faceLogin(): Promise<void>`
+### `faceLogin()`
 
-Initiates the face login process by redirecting the user to the AuthVisage authorization endpoint.
+Redirects the user to the AuthVisage platform for face authentication.
 
-```ts
-await authClient.faceLogin();
+```typescript
+await client.faceLogin();
 ```
 
-### `_constructAuthUrl(): Promise<string>` (Private)
+### `client.auth.getAccessToken()`
 
-Generates the OAuth authorization URL with PKCE and state parameters.
+Fetches a new access token using the refresh token stored in cookies.
 
-### `_handleOAuthCallback(): Promise<string | void>` (Private)
-
-Handles the OAuth callback, validates the state, and exchanges the authorization code for an access token.
-
-## Token Handling
-
-The client expects the token exchange response to follow the `TokenResponse` interface:
-
-```ts
-interface TokenResponse {
-  access_token: string;
-  refresh_token?: string;
-  expires_in?: number;
-}
+```typescript
+const accessToken = await client.auth.getAccessToken();
 ```
 
-If a refresh token is provided, the session is updated in `GoTrueClient`.
+### `client.auth.logout()`
+
+Logs the user out and clears the session.
+
+```typescript
+await client.auth.logout();
+```
+
+### `client.auth.onAuthStateChange(callback)`
+
+Subscribes to authentication state changes. The callback receives the user object or `null` if the user is logged out.
+
+```typescript
+const unsubscribe = client.auth.onAuthStateChange((user) => {
+  if (user) {
+    console.log("User logged in:", user);
+  } else {
+    console.log("User logged out");
+  }
+});
+
+// To unsubscribe
+unsubscribe();
+```
+
+## Token Management
+
+The SDK automatically handles token expiration and refresh. It uses the `TokenManager` class to:
+
+- Refresh tokens when they expire.
+- Notify subscribers about user updates or expiration.
+
+### Example
+
+```typescript
+const accessToken = await client.auth.getAccessToken();
+console.log("Access Token:", accessToken);
+
+const unsubscribe = client.auth.onAuthStateChange((user) => {
+  if (user) {
+    console.log("User logged in:", user);
+  } else {
+    console.log("User logged out");
+  }
+});
+
+// Unsubscribe when no longer needed
+unsubscribe();
+```
+
+## PKCE Handling
+
+The SDK includes a `PKCEHandler` class to manage PKCE challenges. It:
+
+- Generates a code verifier and challenge.
+- Stores the code verifier securely in local storage.
+
+### Example
+
+```typescript
+const pkcePair = await PKCEHandler.generate();
+console.log("Code Verifier:", pkcePair.codeVerifier);
+console.log("Code Challenge:", pkcePair.codeChallenge);
+```
+
+## OAuth State Management
+
+The `OAuthStateHandler` class ensures secure state validation during the OAuth flow. It:
+
+- Generates a unique state value.
+- Validates the returned state against the stored one.
+
+### Example
+
+```typescript
+const state = OAuthStateHandler.generate();
+console.log("Generated State:", state);
+
+const isValid = OAuthStateHandler.validate(returnedState);
+console.log("State is valid:", isValid);
+```
 
 ## Error Handling
 
-- If state validation fails, an error is thrown (`State validation failed! Possible CSRF attack.`).
-- If the token exchange request fails, an error with the response status text is thrown.
-- If the token response does not contain an access token, an error is raised.
-- If `faceLogin()` fails to generate the authentication URL, an error is thrown.
+All methods throw errors if something goes wrong. Use `try-catch` blocks to handle errors gracefully.
 
-## Example Usage
+### Example
 
-```ts
+```typescript
 try {
-  await authClient.faceLogin();
+  const accessToken = await client.auth.getAccessToken();
+  console.log("Access Token:", accessToken);
 } catch (error) {
-  console.error("Login error:", error);
+  console.error("Error fetching access token:", error);
 }
 ```
 
-## Limitations
+## Example Usage
 
-- The client SDK only supports OAuth-based authentication with PKCE.
-- Direct authentication methods such as email/password sign-in are not available.
-- Users must be redirected to the AuthVisage platform for authentication.
-- The SDK is designed specifically for face authentication workflows and does not support other login methods.
+```typescript
+import { AuthVisageClient } from "authvisage-sdk";
+
+const client = new AuthVisageClient({
+  platformUrl: "https://authvisage.com",
+  projectId: "your-project-id",
+  backendUrl: "https://your-backend.com",
+  redirectUrl: "https://your-app.com/callback",
+});
+
+// Login
+await client.faceLogin();
+
+// Get Access Token
+const accessToken = await client.auth.getAccessToken();
+console.log("Access Token:", accessToken);
+
+// Subscribe to Auth State Changes
+const unsubscribe = client.auth.onAuthStateChange((user) => {
+  if (user) {
+    console.log("User logged in:", user);
+  } else {
+    console.log("User logged out");
+  }
+});
+
+// Logout
+await client.auth.logout();
+
+// Unsubscribe from Auth State Changes
+unsubscribe();
+```
 
 ## License
 
-This project is licensed under the MIT License.
+MIT License
