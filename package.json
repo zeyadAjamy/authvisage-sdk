@@ -1,6 +1,6 @@
 {
   "name": "authvisage-sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "authvisage client sdk",
   "main": "index.js",
   "dependencies": {
@@ -39,8 +39,8 @@
     "authentication",
     "supabase",
     "sdk",
-    "face",
-    "id"
+    "face id",
+    "biometric"
   ],
   "author": "Zeyad Alajamy",
   "license": "MIT",
