@@ -1,5 +1,2 @@
-export { AuthVisageClient } from "./authVisageClient";
-export type {
-  AuthVisageClientOptions,
-  TokenResponse,
-} from "./authVisageClient";
+export { AuthVisageClient } from "@/auth/authVisageClient";
+export type { User, TokenResponse } from "@/types";
