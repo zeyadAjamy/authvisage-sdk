@@ -4,7 +4,6 @@
   "description": "authvisage client sdk",
   "main": "index.js",
   "dependencies": {
-    "@supabase/auth-js": "^2.68.0",
     "zod": "^3.24.3"
   },
   "devDependencies": {
