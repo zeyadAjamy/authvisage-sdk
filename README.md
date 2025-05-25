@@ -1,5 +1,7 @@
 # AuthVisageClient SDK Documentation
 
+[![codecov](https://codecov.io/gh/zeyadAjamy/authvisage-sdk/graph/badge.svg?token=V7R70ZTF4F)](https://codecov.io/gh/zeyadAjamy/authvisage-sdk)
+
 ## Overview
 
 The `AuthVisageClient` is a custom authentication client built for OAuth and PKCE-based authentication. It integrates with AuthVisage's platform for secure face authentication.
@@ -22,8 +24,8 @@ import { AuthVisageClient } from "authvisage-sdk";
 
 The `AuthVisageClient` requires the following configuration options:
 
-| Option        | Type     | Description                                    |
-| ------------- | -------- | ---------------------------------------------- |
+| Option          | Type       | Description                                    |
+| --------------- | ---------- | ---------------------------------------------- |
 | `platformUrl` | `string` | The URL of the AuthVisage platform.            |
 | `backendUrl`  | `string` | The backend service URL for token exchange.    |
 | `projectId`   | `string` | The unique identifier for the project.         |
