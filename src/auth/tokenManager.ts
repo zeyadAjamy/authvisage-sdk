@@ -107,7 +107,6 @@ export class TokenManager {
    */
   public onAuthStateChange(callback: Callback) {
     const unsubscribe = this.listenerManager.subscribe(callback);
-
     // Immediately notify the listener with the current user state
     this.getAccessToken();
     return unsubscribe;
