@@ -24,14 +24,14 @@
     "build": "tsup src/index.ts --format cjs,esm --dts --treeshake",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "prepublishOnly": "npm run build",
-    "test": "jest --config jest.config.js",
+    "test": "jest",
     "prepare": "husky install",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "test:watch": "jest --config jest.config.js --watch",
-    "test:coverage": "jest --config jest.config.js --coverage",
-    "test:coverage:ci": "jest --config jest.config.js --coverage --coverageReporters=lcov --coverageReporters=json-summary --coverageReporters=text",
-    "test:ci": "jest --config jest.config.js --coverage --coverageReporters=lcov,text --watchAll=false --passWithNoTests"
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:coverage:ci": "jest --coverage --coverageReporters=lcov --coverageReporters=json-summary --coverageReporters=text",
+    "test:ci": "jest --coverage --coverageReporters=lcov,text --watchAll=false --passWithNoTests"
   },
   "dependencies": {
     "ts-jest": "^29.3.4",
