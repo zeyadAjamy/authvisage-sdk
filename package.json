@@ -2,7 +2,7 @@
   "name": "authvisage-sdk",
   "version": "0.3.0",
   "description": "authvisage client sdk",
-  "main": "index.js",
+  "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
