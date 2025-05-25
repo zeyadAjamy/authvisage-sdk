@@ -54,7 +54,7 @@ export class AuthVisageClient {
    * @returns Session id
    */
   private async _getSessionId(): Promise<string> {
-    const response = await fetch(`${this.backendUrl}/create-session`);
+    const response = await fetch(`${this.backendUrl}/oauth/create-session`);
 
     if (!response.ok) {
       throw new Error("Session retrieval failed." + response.statusText);
@@ -113,7 +113,7 @@ export class AuthVisageClient {
       return;
     }
 
-    const response = await fetch(`${this.backendUrl}/token`, {
+    const response = await fetch(`${this.backendUrl}/oauth/token`, {
       method: "POST",
       body: JSON.stringify({
         code,

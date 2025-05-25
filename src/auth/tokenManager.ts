@@ -57,12 +57,13 @@ export class TokenManager {
    * Assumes the refresh token is stored in cookies.
    */
   public async getAccessToken(): Promise<string> {
-    const response = await fetch(`${this.backendUrl}/refresh-token`, {
+    const response = await fetch(`${this.backendUrl}/oauth/refresh-token`, {
       method: "POST",
       credentials: "include",
     });
 
     if (!response.ok) {
+      this.listenerManager.notify(null);
       throw new Error(`Failed to refresh access token: ${response.statusText}`);
     }
 
@@ -85,7 +86,7 @@ export class TokenManager {
    * @throws {Error} If the logout request fails or the response is not OK.
    */
   public async logout(): Promise<void> {
-    const response = await fetch(`${this.backendUrl}/logout`, {
+    const response = await fetch(`${this.backendUrl}/oauth/logout`, {
       method: "POST",
       credentials: "include",
     });
