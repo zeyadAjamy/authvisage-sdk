@@ -2,15 +2,9 @@
 
 ## Overview
 
-The `AuthVisageClient` is a custom authentication client built for OAuth and PKCE-based authentication. It integrates with AuthVisage's platform for secure face authentication while encapsulating `@supabase/auth-js` internally to hide direct authentication methods such as sign-in and sign-up.
+The `AuthVisageClient` is a custom authentication client built for OAuth and PKCE-based authentication. It integrates with AuthVisage's platform for secure face authentication.
 
 ## Installation
-
-Ensure you have `@supabase/auth-js` installed in your project:
-
-```sh
-npm install @supabase/auth-js
-```
 
 Install the AuthVisage SDK:
 
@@ -21,7 +15,7 @@ npm install authvisage-sdk
 Import the client into your application:
 
 ```ts
-import { AuthVisageClient, AuthVisageClientOptions } from "authvisage-sdk";
+import { AuthVisageClient } from "authvisage-sdk";
 ```
 
 ## Configuration Options
@@ -30,7 +24,6 @@ The `AuthVisageClient` requires the following configuration options:
 
 | Option        | Type     | Description                                    |
 | ------------- | -------- | ---------------------------------------------- |
-| `goTrueUrl`   | `string` | The URL of the GoTrue authentication server.   |
 | `platformUrl` | `string` | The URL of the AuthVisage platform.            |
 | `backendUrl`  | `string` | The backend service URL for token exchange.    |
 | `projectId`   | `string` | The unique identifier for the project.         |
@@ -42,7 +35,6 @@ Create an instance of `AuthVisageClient` with the necessary options:
 
 ```ts
 const authClient = new AuthVisageClient({
-  goTrueUrl: "https://auth.example.com",
   platformUrl: "https://platform.authvisage.com",
   backendUrl: "https://api.authvisage.com",
   projectId: "your-project-id",
