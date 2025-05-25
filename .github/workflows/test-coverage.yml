@@ -1,0 +1,45 @@
+name: Test Coverage
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "sdk/package-lock.json"
+
+      - name: Install dependencies
+        run: |
+          cd sdk
+          npm ci
+
+      - name: Run linting
+        run: |
+          cd sdk
+          npm run lint
+
+      - name: Run tests with coverage
+        run: |
+          cd sdk
+          npm run test:coverage:ci
+
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
