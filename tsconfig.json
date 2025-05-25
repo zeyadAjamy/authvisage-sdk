@@ -12,10 +12,11 @@
     "paths": {
       "@/*": ["src/*"]
     },
+    "types": ["jest", "node"],
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"],
+  "include": ["src", "tests"],
   "exclude": ["node_modules", "dist"]
 }
