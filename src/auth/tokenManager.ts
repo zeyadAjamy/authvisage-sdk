@@ -105,6 +105,10 @@ export class TokenManager {
    *          when called, removes the listener.
    */
   public onAuthStateChange(callback: Callback) {
-    return this.listenerManager.subscribe(callback);
+    const unsubscribe = this.listenerManager.subscribe(callback);
+
+    // Immediately notify the listener with the current user state
+    this.getAccessToken();
+    return unsubscribe;
   }
 }
