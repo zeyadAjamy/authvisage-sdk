@@ -1,6 +1,6 @@
 {
   "name": "authvisage-sdk",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "authvisage client sdk",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
