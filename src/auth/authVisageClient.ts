@@ -6,6 +6,7 @@ import {
 } from "@/schemas/clientOptions";
 import { safeAwait } from "@/utils/safe-await";
 import { TokenManager } from "@/auth/tokenManager";
+import { isBrowser } from "@/utils/environment";
 import type { TokenResponse } from "@/types";
 
 /**
@@ -17,6 +18,7 @@ export class AuthVisageClient {
   private readonly backendUrl: string;
   private readonly redirectUrl: string;
   public readonly auth: TokenManager;
+  private initialized = false;
 
   constructor(options: ClientOptions) {
     const { platformUrl, projectId, backendUrl, redirectUrl } = options;
@@ -37,7 +39,14 @@ export class AuthVisageClient {
     this.redirectUrl = redirectUrl;
     this.auth = new TokenManager(backendUrl);
 
-    this._handleOAuthCallback().catch(console.error);
+    // Only run browser-specific code in browser environment
+    if (isBrowser()) {
+      // Use setTimeout to ensure this runs after the component is mounted in the client
+      setTimeout(() => {
+        this._handleOAuthCallback().catch(console.error);
+        this.initialized = true;
+      }, 0);
+    }
   }
 
   /**
@@ -76,24 +85,32 @@ export class AuthVisageClient {
 
     return url.toString();
   }
-
   /**
    * Handles the OAuth callback and exchanges the authorization code for an access token
    */
   private async _handleOAuthCallback(): Promise<string | void> {
+    if (!isBrowser()) {
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
     const returnedState = urlParams.get("state");
-    const codeVerifier = PKCEHandler.getCodeVerifier();
 
+    // Early exit if no code or state in URL
     if (!code || !returnedState) {
-      throw new Error(
-        "Missing authorization code or state in the URL parameters."
-      );
+      return;
+    }
+
+    const codeVerifier = await PKCEHandler.getCodeVerifier();
+
+    if (!codeVerifier) {
+      return;
     }
 
     if (!OAuthStateHandler.validate(returnedState)) {
-      throw new Error("State validation failed! Possible CSRF attack.");
+      console.error("State validation failed! Possible CSRF attack.");
+      return;
     }
 
     const response = await fetch(`${this.backendUrl}/token`, {
