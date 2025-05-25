@@ -102,14 +102,14 @@ export class AuthVisageClient {
       return;
     }
 
-    const codeVerifier = await PKCEHandler.getCodeVerifier();
-
-    if (!codeVerifier) {
+    if (!OAuthStateHandler.validate(returnedState)) {
+      console.error("State validation failed! Possible CSRF attack.");
       return;
     }
 
-    if (!OAuthStateHandler.validate(returnedState)) {
-      console.error("State validation failed! Possible CSRF attack.");
+    const codeVerifier = await PKCEHandler.getCodeVerifier();
+
+    if (!codeVerifier) {
       return;
     }
 
@@ -147,9 +147,17 @@ export class AuthVisageClient {
    */
   public async faceLogin(): Promise<void> {
     const [data, error] = await safeAwait(this._constructAuthUrl());
-    if (error) {
-      throw new Error(`Face login failed: ${error.message}`);
+
+    if (error || !data) {
+      throw new Error(`Face login failed: ${error?.message}`);
     }
+
+    if (!isBrowser()) {
+      throw new Error(
+        "Face login can only be initiated in a browser environment."
+      );
+    }
+
     window.location.assign(data);
   }
 }
