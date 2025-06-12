@@ -1,6 +1,7 @@
 import { safeAwait } from "@/utils/safe-await";
 import { decodeJwt } from "@/utils/decode-jwt";
 import { ListenerManager } from "@/helpers/listenerManager";
+import { SessionPersistence } from "@/helpers/sessionPersistence";
 import type { User, TokenResponse } from "@/types";
 
 export type Callback = (user: User | null) => void;
@@ -45,6 +46,7 @@ export class TokenManager {
       throw new Error("Session must contain an access token.");
     }
 
+    SessionPersistence.setState(session);
     const decodedToken = decodeJwt<User>(session.access_token);
     this.listenerManager.notify(decodedToken);
 
@@ -56,20 +58,29 @@ export class TokenManager {
    * Sends a refresh request to get a new access token.
    * Assumes the refresh token is stored in cookies.
    */
-  public async getAccessToken(): Promise<string> {
-    const response = await fetch(`${this.backendUrl}/oauth/refresh-token`, {
-      method: "POST",
-      credentials: "include",
-    });
+  public async getAccessToken(): Promise<string | null> {
+    const token = SessionPersistence.getState();
+    const [response, responseError] = await safeAwait(
+      fetch(`${this.backendUrl}/oauth/refresh-token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          refresh_token: token?.refresh_token,
+        }),
+      })
+    );
 
-    if (!response.ok) {
+    if (responseError || !response.ok) {
       this.listenerManager.notify(null);
-      throw new Error(`Failed to refresh access token: ${response.statusText}`);
+      return null;
     }
 
     const [data, error] = await safeAwait<TokenResponse>(response.json());
     if (error) {
-      throw new Error("Failed to parse token response.");
+      this.listenerManager.notify(null);
+      return null;
     }
     this.setSession(data);
     return data.access_token;
@@ -86,15 +97,22 @@ export class TokenManager {
    * @throws {Error} If the logout request fails or the response is not OK.
    */
   public async logout(): Promise<void> {
+    const token = SessionPersistence.getState();
     const response = await fetch(`${this.backendUrl}/oauth/logout`, {
       method: "POST",
-      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...token,
+      }),
     });
 
     if (!response.ok) {
       throw new Error(`Failed to sign out: ${response.statusText}`);
     }
 
+    SessionPersistence.clearState();
     this.listenerManager.notify(null);
   }
 
