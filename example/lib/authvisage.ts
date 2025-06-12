@@ -2,7 +2,7 @@ import { AuthVisageClient, User } from "authvisage-sdk";
 
 export const authVisage = new AuthVisageClient({
   projectId: "90771601-6481-4083-9bf3-2d99fffc54de",
-  backendUrl: "http://localhost:8000/api/v1/",
+  backendUrl: "http://localhost:8000/api/v1",
   platformUrl: "http://localhost:3000",
   redirectUrl: "http://localhost:8080",
 });
