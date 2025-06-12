@@ -1,4 +1,5 @@
 import { isBrowser } from "@/utils/environment";
+import { Buffer } from "buffer";
 
 /**
  * PKCE Challenge Pair structure
