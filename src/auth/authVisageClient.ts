@@ -5,7 +5,7 @@ import {
   type ClientOptions,
 } from "@/schemas/clientOptions";
 import { safeAwait } from "@/utils/safe-await";
-import { TokenManager } from "@/auth/tokenManager";
+import { TokenManager } from "./tokenManager";
 import { isBrowser } from "@/utils/environment";
 import type { TokenResponse } from "@/types";
 
@@ -54,7 +54,15 @@ export class AuthVisageClient {
    * @returns Session id
    */
   private async _getSessionId(): Promise<string> {
-    const response = await fetch(`${this.backendUrl}/oauth/create-session`);
+    const response = await fetch(`${this.backendUrl}/oauth/create-session`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        project_id: this.projectId,
+      }),
+    });
 
     if (!response.ok) {
       throw new Error("Session retrieval failed." + response.statusText);
@@ -77,11 +85,11 @@ export class AuthVisageClient {
 
     const url = new URL(this.platformUrl + "/authorize");
     url.searchParams.append("state", state);
-    url.searchParams.append("projectId", this.projectId);
+    url.searchParams.append("project_id", this.projectId);
     url.searchParams.append("redirect_uri", this.redirectUrl);
     url.searchParams.append("code_challenge", pkcePair.codeChallenge);
     url.searchParams.append("code_challenge_method", "S256");
-    url.searchParams.append("session_id", sessionId);
+    url.searchParams.append("oauth_session_id", sessionId);
 
     return url.toString();
   }
@@ -90,6 +98,7 @@ export class AuthVisageClient {
    */
   private async _handleOAuthCallback(): Promise<string | void> {
     if (!isBrowser()) {
+      console.warn("OAuth callback handling is only supported in browser.");
       return;
     }
 
@@ -115,6 +124,9 @@ export class AuthVisageClient {
 
     const response = await fetch(`${this.backendUrl}/oauth/token`, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         code,
         code_verifier: codeVerifier,
