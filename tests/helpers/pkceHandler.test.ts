@@ -13,13 +13,13 @@ describe("PKCEHandler", () => {
     it("should generate a PKCE pair in browser environment", async () => {
       const pkcePair = await PKCEHandler.generate();
 
-      // Should match our test values from the mock
-      expect(pkcePair.codeVerifier).toBe("test-uuid-12345");
-      expect(pkcePair.codeChallenge).toBe("test-base64-string");
+      // Should has codeVerifier and codeChallenge of type string
+      expect(typeof pkcePair.codeVerifier).toBe("string");
+      expect(typeof pkcePair.codeChallenge).toBe("string");
 
       // Should store code verifier in localStorage
       expect(window.localStorage.getItem("authVisage:pkce_verifier")).toBe(
-        "test-uuid-12345"
+        pkcePair.codeVerifier
       );
     });
 
@@ -64,27 +64,35 @@ describe("PKCEHandler", () => {
     //   global.window = originalWindow;
     // });
   });
-
   describe("hash and encode", () => {
     it("should hash and encode a string using the public API", async () => {
-      // Use predefined expected output
-      const expectedOutput = "test-base64-string";
-
-      // Mock the crypto.subtle.digest to return a predefined ArrayBuffer
-      jest
+      // Mock crypto.subtle.digest to return a predictable ArrayBuffer
+      const mockDigest = new Uint8Array([1, 2, 3, 4, 5]).buffer;
+      const digestSpy = jest
         .spyOn(window.crypto.subtle, "digest")
-        .mockResolvedValue(new TextEncoder().encode("mocked-digest").buffer);
+        .mockResolvedValue(mockDigest);
+
+      // Mock crypto.randomUUID to return a predictable value
+      const mockUUID = "19648f13-dc8d-4222-aea3-6a89431aa94b";
+      jest.spyOn(window.crypto, "randomUUID").mockReturnValue(mockUUID);
 
       // Call the public API that uses the hashing internally
       const pkcePair = await PKCEHandler.generate();
 
-      // Validate the output
-      expect(pkcePair.codeChallenge).toBe(expectedOutput);
+      // Validate that we get a proper base64url encoded string
+      expect(typeof pkcePair.codeChallenge).toBe("string");
+      expect(pkcePair.codeChallenge).toBe("AQIDBAU");
+      expect(pkcePair.codeVerifier).toBe(mockUUID);
+      expect(digestSpy).toHaveBeenCalledWith("SHA-256", expect.any(Object)); // Verify the input to digest was the encoded UUID
+      const call = digestSpy.mock.calls[0];
+      const inputArray = call[1] as Uint8Array;
 
-      // Ensure the hashing function was called with the correct input
-      const call = (window.crypto.subtle.digest as jest.Mock).mock.calls[0];
-      expect(call[0]).toBe("SHA-256");
-      expect(call[1].constructor.name).toBe("Uint8Array");
+      // Verify it's actually a Uint8Array
+      expect(inputArray.constructor.name).toBe("Uint8Array");
+
+      // Verify the input matches the expected encoded UUID (compare as arrays to avoid constructor issues)
+      const expectedEncodedUUID = new TextEncoder().encode(mockUUID);
+      expect(Array.from(inputArray)).toEqual(Array.from(expectedEncodedUUID));
     });
   });
 });
