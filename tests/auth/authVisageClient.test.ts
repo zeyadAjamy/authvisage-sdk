@@ -161,7 +161,16 @@ describe("AuthVisageClient", () => {
 
       // Verify session creation was requested
       expect(fetch).toHaveBeenCalledWith(
-        `${validClientOptions.backendUrl}/oauth/create-session`
+        `${validClientOptions.backendUrl}/oauth/create-session`,
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            project_id: validClientOptions.projectId,
+          }),
+        })
       );
 
       // Verify OAuth handlers were called
@@ -177,10 +186,10 @@ describe("AuthVisageClient", () => {
               "\\$&"
             )}/authorize\\?` +
               ".*state=state_abc123.*" +
-              `.*projectId=${validClientOptions.projectId}.*` +
+              `.*project_id=${validClientOptions.projectId}.*` +
               ".*code_challenge=challenge_def456.*" +
               ".*code_challenge_method=S256.*" +
-              ".*session_id=session-123.*"
+              ".*oauth_session_id=session-123.*"
           )
         )
       );
@@ -512,7 +521,16 @@ describe("faceLogin", () => {
 
     // Should have called fetch for session ID
     expect(fetch).toHaveBeenCalledWith(
-      `${validClientOptions.backendUrl}/oauth/create-session`
+      `${validClientOptions.backendUrl}/oauth/create-session`,
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          project_id: validClientOptions.projectId,
+        }),
+      })
     );
 
     // Should have generated state and PKCE

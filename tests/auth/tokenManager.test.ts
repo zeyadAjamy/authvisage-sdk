@@ -90,7 +90,12 @@ describe("TokenManager", () => {
         `${backendUrl}/oauth/refresh-token`,
         expect.objectContaining({
           method: "POST",
-          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            refresh_token: "test-refresh-token",
+          }),
         })
       );
     });
@@ -102,10 +107,8 @@ describe("TokenManager", () => {
         statusText: "Invalid token",
       });
 
-      // should throw an error
-      await expect(tokenManager.getAccessToken()).rejects.toThrow(
-        "Failed to refresh access token: Invalid token"
-      );
+      // should return null on failure
+      await expect(tokenManager.getAccessToken()).resolves.toEqual(null);
     });
   });
 
@@ -131,10 +134,18 @@ describe("TokenManager", () => {
   describe("logout", () => {
     it("should clear session and notify listeners", () => {
       tokenManager.logout();
+
       // Fetch should be called with logout endpoint
       expect(fetch).toHaveBeenCalledWith(`${backendUrl}/oauth/logout`, {
         method: "POST",
-        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          access_token: "test-access-token",
+          refresh_token: "test-refresh-token",
+          expires_in: 3600,
+        }),
       });
     });
 
